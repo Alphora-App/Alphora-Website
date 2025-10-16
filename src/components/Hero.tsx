@@ -5,7 +5,7 @@ export default function Hero() {
     <section className="relative flex flex-col items-center justify-center min-h-screen text-center bg-mesh">
       {/* logo */}
       <motion.img
-        src="/Green Alphora Logo.png"
+        src="/Purple Alphora Logo.png"
         alt="Alphora logo"
         className="w-[320px] h-[220px] mb-6 drop-shadow-lg -ml-6"
         initial={{ opacity: 0, scale: 0.8 }}

@@ -10,7 +10,7 @@ export default function Nav() {
       <div className="max-w-6xl mx-auto px-6 py-5 flex items-center justify-between">
         <div className="flex items-center gap-3 font-bold text-2xl">
           <img
-            src={"/Green%20Alphora%20Logo.png"}
+            src={"/Purple%20Alphora%20Logo.png"}
             alt="Alphora logo"
             className="w-10 h-10 object-contain select-none"
             draggable={false}

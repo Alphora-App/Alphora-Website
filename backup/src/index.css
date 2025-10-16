@@ -1,0 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Glassmorphism utilities */
+.glass {
+  /* light green translucent card */
+  @apply bg-brand-500/10 border border-brand-300/30 backdrop-blur-md shadow-glow;
+}
+
+.glass-dark {
+  /* darker emerald tint for nav + modals */
+  @apply bg-brand-800/40 border border-brand-400/20 backdrop-blur-md shadow-glow;
+}
+
+/* Smooth scroll */
+html {
+  scroll-behavior: smooth;
+}

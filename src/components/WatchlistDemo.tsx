@@ -36,9 +36,21 @@ export default function WatchlistDemo(){
   return (
     <div className="space-y-4">
       <div className="flex gap-2 items-center">
-        <input placeholder="Add ticker (AAPL)" className="px-3 py-2 rounded-lg glass-dark w-40"
-          onKeyDown={e=>{ if(e.key==='Enter'){ add((e.target as HTMLInputElement).value); (e.target as HTMLInputElement).value=''; } }} />
-        <input placeholder="Filter…" className="px-3 py-2 rounded-lg glass-dark flex-1" value={filter} onChange={e=>setFilter(e.target.value)} />
+        <input 
+          id="add-ticker"
+          name="add-ticker"
+          placeholder="Add ticker (AAPL)" 
+          className="px-3 py-2 rounded-lg glass-dark w-40"
+          onKeyDown={e=>{ if(e.key==='Enter'){ add((e.target as HTMLInputElement).value); (e.target as HTMLInputElement).value=''; } }} 
+        />
+        <input 
+          id="filter-ticker"
+          name="filter-ticker"
+          placeholder="Filter…" 
+          className="px-3 py-2 rounded-lg glass-dark flex-1" 
+          value={filter} 
+          onChange={e=>setFilter(e.target.value)} 
+        />
       </div>
       <motion.div 
         initial={{ opacity:0, y:20 }}

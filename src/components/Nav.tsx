@@ -7,15 +7,17 @@ export default function Nav() {
       animate={{ y: 0, opacity: 1 }}
       className="sticky top-0 z-40 backdrop-blur bg-brand-900/50 border-b border-brand-400/10"
     >
-      <div className="max-w-6xl mx-auto px-6 py-5 flex items-center justify-between">
-        <div className="flex items-center gap-3 font-bold text-2xl">
+      <div className="max-w-6xl mx-auto px-6 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-1 font-bold text-xl">
           <img
-            src={"/Purple%20Alphora%20Logo.png"}
+            src="/alphora-logo-official.svg"
             alt="Alphora logo"
-            className="w-10 h-10 object-contain select-none"
+            className="w-24 h-24 object-contain select-none"
             draggable={false}
+            onLoad={() => console.log('Nav logo loaded successfully from:', document.querySelector('img[src="/logo.png"]')?.src)}
+            onError={(e) => console.log('Nav logo failed to load:', e)}
           />
-          <span className="text-brand-100 tracking-wide">Alphora</span>
+          <span className="text-cyan-100 tracking-wide text-4xl">Alphora</span>
         </div>
 
         {/* nav links slightly larger, bolder, and lower */}
@@ -31,7 +33,7 @@ export default function Nav() {
           </a>
           <a
             href="#cta"
-            className="px-4 py-2 rounded-full glass text-brand-50 font-semibold relative -top-[1px]"
+            className="px-4 py-2 rounded-full glass text-cyan-50 font-semibold relative -top-[1px] bg-cyan-500/20 border border-cyan-400/30"
           >
             Get Started
           </a>

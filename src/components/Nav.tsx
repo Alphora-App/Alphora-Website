@@ -14,10 +14,23 @@ export default function Nav() {
             alt="Alphora logo"
             className="w-24 h-24 object-contain select-none"
             draggable={false}
-            onLoad={() => console.log('Nav logo loaded successfully from:', document.querySelector('img[src="/logo.png"]')?.src)}
-            onError={(e) => console.log('Nav logo failed to load:', e)}
+            onLoad={() => {
+              const img = document.querySelector(
+                'img[src="/alphora-logo-official.svg"]'
+              ) as HTMLImageElement | null;
+              console.log(
+                "Nav logo loaded successfully from:",
+                img?.src || "not found"
+              );
+            }}
+            onError={(e) =>
+              console.error("Nav logo failed to load:", e)
+            }
           />
-          <span className="text-cyan-100 tracking-wide text-4xl">Alphora</span>
+
+          <span className="text-cyan-100 tracking-wide text-4xl">
+            Alphora
+          </span>
         </div>
 
         {/* nav links slightly larger, bolder, and lower */}
@@ -25,15 +38,15 @@ export default function Nav() {
           <a href="#features" className="opacity-90 hover:opacity-100">
             Features
           </a>
-          <a href="#watchlist" className="opacity-90 hover:opacity-100">
-            Watchlist
+          <a href="#how" className="opacity-90 hover:opacity-100">
+            How it Works
           </a>
           <a href="#faq" className="opacity-90 hover:opacity-100">
             FAQ
           </a>
           <a
             href="#cta"
-            className="px-4 py-2 rounded-full glass text-cyan-50 font-semibold relative -top-[1px] bg-cyan-500/20 border border-cyan-400/30"
+            className="px-4 py-2 rounded-full glass text-cyan-50 font-semibold relative -top-[1px] bg-cyan-500/20 border border-cyan-400/30 hover:bg-cyan-500/30 transition-all duration-200"
           >
             Get Started
           </a>

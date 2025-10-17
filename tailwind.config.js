@@ -5,26 +5,31 @@ export default {
     extend: {
       colors: {
         brand: {
-          50:  "#f8fafc",   // soft white
-          100: "#e2e8f0",   // light gray-blue
-          200: "#cbd5e1",   // light slate
-          300: "#94a3b8",   // medium slate
-          400: "#64748b",   // slate-500
-          500: "#475569",   // slate-600
-          600: "#334155",   // slate-700
-          700: "#1e293b",   // slate-800
-          800: "#0f172a",   // deep navy
-          900: "#020617"    // almost black
+          50:  "#f5f3ff",
+          100: "#e9e8ff",
+          200: "#c9bfff",
+          300: "#a38eff",
+          400: "#7f5cff",
+          500: "#7041ff",   // rich violet-blue core
+          600: "#552ae5",   // darker violet
+          700: "#2b1a72",   // deep indigo shadow
+          800: "#151033",   // near-black indigo base
+          900: "#090713"    // almost black — background base
+        },
+        accent: {
+          magenta: "#d946ef", // subtle glow accent
+          blue: "#420efeff"
         }
       },
       boxShadow: {
-        glow: "0 0 40px rgba(217, 70, 239, 0.35)" // soft pinkish glow
+        glow: "0 0 80px rgba(125, 66, 255, 0.3)", // violet halo
+        glowSoft: "0 0 60px rgba(217, 70, 239, 0.15)"
       },
       backgroundImage: {
         mesh: `
-          radial-gradient(1000px 600px at 10% 10%, rgba(139, 92, 246, 0.22), transparent 60%),
-          radial-gradient(800px 500px at 90% 20%, rgba(30, 41, 59, 0.18), transparent 60%),
-          radial-gradient(700px 500px at 50% 100%, rgba(71, 85, 105, 0.25), transparent 60%)
+          radial-gradient(900px 600px at 10% 10%, rgba(125, 66, 255, 0.25), transparent 70%),
+          radial-gradient(800px 500px at 90% 20%, rgba(91, 33, 182, 0.18), transparent 70%),
+          radial-gradient(900px 600px at 50% 100%, rgba(66, 7, 243, 0.12), transparent 75%)
         `
       },
       backdropBlur: { xs: "2px" }

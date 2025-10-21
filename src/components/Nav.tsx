@@ -5,7 +5,7 @@ export default function Nav() {
     <motion.header
       initial={{ y: -24, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      className="sticky top-0 z-40 backdrop-blur bg-brand-900/50 border-b border-brand-400/10"
+      className="sticky top-0 z-40 backdrop-blur bg-brand-900/50 border-b border-brand-400/10 glass-dark"
     >
       <div className="max-w-6xl mx-auto px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-1 font-bold text-xl">
@@ -33,22 +33,22 @@ export default function Nav() {
           </span>
         </div>
 
-        {/* nav links slightly larger, bolder, and lower */}
-        <nav className="hidden sm:flex gap-7 text-lg font-semibold relative top-[4px]">
-          <a href="#features" className="opacity-90 hover:opacity-100">
-            Features
+        {/* updated nav: modern labels + small micro-interactions */}
+        <nav className="hidden sm:flex gap-7 text-lg font-semibold items-center">
+          <a href="#testimonials" className="opacity-90 hover:opacity-100 interactive">
+            Testimonials
           </a>
-          <a href="#how" className="opacity-90 hover:opacity-100">
-            How it Works
+          <a href="#showcase" className="opacity-90 hover:opacity-100 interactive">
+            Preview
           </a>
-          <a href="#faq" className="opacity-90 hover:opacity-100">
+          <a href="#faq" className="opacity-90 hover:opacity-100 interactive">
             FAQ
           </a>
           <a
             href="#cta"
-            className="px-4 py-2 rounded-full glass text-cyan-50 font-semibold relative -top-[1px] bg-cyan-500/20 border border-cyan-400/30 hover:bg-cyan-500/30 transition-all duration-200"
+            className="px-4 py-2 rounded-full glass text-cyan-50 font-semibold bg-cyan-500/20 border border-cyan-400/30 hover:bg-cyan-500/30 transition-all duration-200 interactive"
           >
-            Get Started
+            Get early access
           </a>
         </nav>
       </div>

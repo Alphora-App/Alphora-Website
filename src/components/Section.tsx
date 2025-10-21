@@ -19,7 +19,7 @@ export default function Section({ id, title, children }:{ id:string, title:strin
         viewport={{ once: true, amount: .2 }}
         transition={{ duration: .6, delay: .1 }}
       >
-        {children}
+        <div className="glass p-6 rounded-2xl">{children}</div>
       </motion.div>
     </section>
   )

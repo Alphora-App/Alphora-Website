@@ -1,35 +1,75 @@
 import { motion, useMotionValue, useTransform, useSpring } from "framer-motion";
+import FloatingBubbles from "./FloatingBubbles";
 import { useEffect } from "react";
 
 function InteractiveGlow() {
   const mx = useMotionValue(0);
   const my = useMotionValue(0);
 
-  const x = useSpring(mx, { stiffness: 150, damping: 30, mass: 0.2 });
-  const y = useSpring(my, { stiffness: 150, damping: 30, mass: 0.2 });
+  const x = useSpring(mx, { stiffness: 140, damping: 26, mass: 0.22 });
+  const y = useSpring(my, { stiffness: 140, damping: 26, mass: 0.22 });
 
   useEffect(() => {
     const move = (e: MouseEvent) => {
-      mx.set(e.clientX);
-      my.set(e.clientY);
+      // center-relative normalized values for subtle following
+      const cx = window.innerWidth / 2;
+      const cy = window.innerHeight / 2;
+      mx.set((e.clientX - cx) / cx);
+      my.set((e.clientY - cy) / cy);
     };
     window.addEventListener("mousemove", move);
     return () => window.removeEventListener("mousemove", move);
   }, [mx, my]);
 
   return (
-    <motion.div
-      style={{ x, y, translateX: "-50%", translateY: "-50%" }}
-      className="pointer-events-none fixed inset-0 z-10 h-[40rem] w-[40rem] rounded-full opacity-40 blur-3xl"
-    >
-      <div
-        className="h-full w-full rounded-full"
-        style={{
-          background:
-            "radial-gradient(closest-side, rgba(139,92,246,0.35), rgba(139,92,246,0.15), transparent 70%)",
-        }}
-      />
-    </motion.div>
+    <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 flex items-center justify-center">
+      {/* Layered glows for a modern, techy look */}
+      <motion.div
+        style={{ x: x, y: y }}
+        className="absolute rounded-full blur-3xl opacity-50"
+        animate={{ rotate: [0, 12, 0] }}
+        transition={{ duration: 18, repeat: Infinity, ease: "linear" }}
+      >
+        <div
+          className="h-[40rem] w-[40rem] rounded-full"
+          style={{
+            background: "radial-gradient(closest-side, rgba(124,58,237,0.35), rgba(99,102,241,0.08), transparent 60%)",
+          }}
+        />
+      </motion.div>
+
+      <motion.div
+        style={{ x: x, y: y }}
+        className="absolute rounded-full blur-2xl opacity-40"
+        animate={{ rotate: [0, -10, 0] }}
+        transition={{ duration: 24, repeat: Infinity, ease: "linear" }}
+      >
+        <div
+          className="h-[28rem] w-[28rem] rounded-full"
+          style={{
+            background: "radial-gradient(closest-side, rgba(34,211,238,0.26), rgba(99,102,241,0.06), transparent 60%)",
+          }}
+        />
+      </motion.div>
+
+      <motion.div
+        className="absolute rounded-full blur-sm opacity-30"
+        animate={{ rotate: [0, 8, 0] }}
+        transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
+      >
+        <div
+          className="h-[18rem] w-[18rem] rounded-full"
+          style={{
+            background: "radial-gradient(closest-side, rgba(168,85,247,0.18), rgba(34,211,238,0.04), transparent 60%)",
+          }}
+        />
+      </motion.div>
+
+      {/* subtle tech grid overlay */}
+      <div className="absolute inset-0 opacity-10 pointer-events-none">
+        <div className="tech-grid w-full h-full" />
+      </div>
+    </div>
   );
 }
 
@@ -54,7 +94,8 @@ export default function Hero() {
 
   return (
     <section className="relative flex flex-col items-center justify-center min-h-screen text-center bg-mesh overflow-hidden">
-      <InteractiveGlow />
+  <InteractiveGlow />
+  <FloatingBubbles />
 
       <motion.div
         style={{ rotateX: rx, rotateY: ry, x: moveX, y: moveY }}
@@ -71,6 +112,8 @@ export default function Hero() {
             Alphora
           </span>
         </motion.h1>
+
+        {/* removed hero-accent per design; InteractiveGlow provides modern techy lighting */}
 
         {/* Slogan */}
         <motion.p

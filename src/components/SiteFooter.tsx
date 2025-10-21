@@ -26,7 +26,7 @@ export default function SiteFooter() {
       const res = await fetch(FORMSPREE_ENDPOINT, { method: "POST", headers: { Accept: "application/json" }, body: form });
       if (res.ok) {
         setStatus("success");
-        setMessage("Thanks — we'll be in touch!");
+        setMessage(`Thanks — we'll be in touch! We'll email you at ${email}.`);
         (e.currentTarget as HTMLFormElement).reset();
         try {
           const seenRaw = localStorage.getItem("alphora_waitlist_emails");
@@ -36,7 +36,9 @@ export default function SiteFooter() {
         } catch (err) {}
       } else setStatus("error");
     } catch (err) {
+      console.error("Footer waitlist submission failed:", err);
       setStatus("error");
+      setMessage(err && err instanceof Error ? err.message : "Network error — please try again later.");
     }
   }
 
@@ -52,10 +54,10 @@ export default function SiteFooter() {
           <h4 className="font-semibold text-brand-50 mb-3">Get early access</h4>
           <form onSubmit={handleSubmit} className="flex gap-2">
             <input name="email" type="email" placeholder="you@domain.com" className="w-full rounded-lg bg-white/5 px-3 py-2 text-brand-50 placeholder:text-brand-50/40 focus:outline-none" />
-            <button className="px-4 rounded-lg bg-gradient-to-r from-violet-600/70 to-pink-500/70 text-white shadow-glow interactive" disabled={status === "loading"}>{status === "loading" ? "Sending..." : "Join"}</button>
+            <button className="px-4 rounded-lg bg-gradient-to-r from-violet-600/70 to-pink-500/70 text-white shadow-glow interactive" disabled={status === "loading" || status === "success"}>{status === "loading" ? "Sending..." : "Join"}</button>
           </form>
-          {status === "success" && message && <div className="mt-2 text-green-400">{message}</div>}
-          {status === "error" && message && <div className="mt-2 text-red-400">{message}</div>}
+          {status === "success" && message && <div className="mt-2 text-green-400" role="status" aria-live="polite">{message}</div>}
+          {status === "error" && message && <div className="mt-2 text-red-400" role="alert" aria-live="assertive">{message}</div>}
         </div>
 
         <div>

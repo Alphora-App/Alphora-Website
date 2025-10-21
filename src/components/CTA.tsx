@@ -34,7 +34,7 @@ export default function CTA() {
       });
       if (res.ok) {
         setStatus("success");
-        setMessage("Thanks — you're on the list!");
+        setMessage(`Thanks — you're on the list! We'll email you at ${email}.`);
         (e.currentTarget as HTMLFormElement).reset();
         // record email locally to prevent duplicates
         try {
@@ -53,8 +53,11 @@ export default function CTA() {
         setMessage(bodyText || "Something went wrong. Try again later.");
       }
     } catch (err) {
+      // surface error to console for debugging and show a helpful message to the user
+      console.error("Waitlist submission failed:", err);
       setStatus("error");
-      setMessage("Network error — please try again later.");
+      const short = err && err instanceof Error ? err.message : String(err || "");
+      setMessage(`Network error — please try again later.${short ? ` (${short})` : ""}`);
     }
   }
 
@@ -74,15 +77,23 @@ export default function CTA() {
             />
             <button
               type="submit"
-              disabled={status === "loading"}
+              disabled={status === "loading" || status === "success"}
               className="px-6 rounded-xl bg-gradient-to-r from-violet-600/60 to-pink-500/60 border border-violet-400/40 text-brand-50 hover:from-violet-600/80 hover:to-pink-500/80 transition-all shadow-glow"
             >
               {status === "loading" ? "Sending..." : "Join"}
             </button>
           </form>
 
-          {status === "success" && message && <div className="mt-4 text-green-400">{message}</div>}
-          {status === "error" && message && <div className="mt-4 text-red-400">{message}</div>}
+          {status === "success" && message && (
+            <div className="mt-4 text-green-400" role="status" aria-live="polite">
+              {message}
+            </div>
+          )}
+          {status === "error" && message && (
+            <div className="mt-4 text-red-400" role="alert" aria-live="assertive">
+              {message}
+            </div>
+          )}
         </div>
       </div>
     </section>

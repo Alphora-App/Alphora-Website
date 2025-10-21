@@ -13,7 +13,7 @@ export default function About() {
       >
         <h3 className="text-2xl font-semibold mb-2">Our mission</h3>
         <p className="text-brand-100/90">
-          lowkey what is our mission idk
+          Our mission at Alphora is to simplify financial literacy using micro learning and AI feedback to help users build investing skills through habits. Achieving financial literacy shouldn't be just for experts or as intimidating as it is. Thats where Alphora comes in; We turn investing into a all in one resource that's intuitive, interactive, and easily accesible to all.
         </p>
       </motion.div>
 
@@ -25,12 +25,12 @@ export default function About() {
         transition={{ duration: 0.6, delay: 0.05 }}
         className="p-6 rounded-2xl glass"
       >
-        <h3 className="text-2xl font-semibold mb-2">What we value</h3>
+        <h3 className="text-2xl font-semibold mb-2">Our Pillars</h3>
         <ul className="space-y-2 text-brand-100/90">
-          <li>• Point 1</li>
-          <li>• Point 2</li>
-          <li>• Point 3</li>
-          <li>• Point 4</li>
+          <li>• Accesbility: Investing education should be acessible to all.</li>
+          <li>• Clarity: Educational resources shouldnt be overcomplex and wordy. We simplify all our lessons</li>
+          <li>• Consistency: True learning comes from habits, not reading in a single night</li>
+          <li>• Empowerment: Alphora gives learners the confidence to make financial decisions.</li>
         </ul>
       </motion.div>
 
@@ -44,7 +44,7 @@ export default function About() {
       >
         <h3 className="text-2xl font-semibold mb-2">Who we are</h3>
         <p className="text-brand-100/90">
-          we're goated
+          Alphora is a financial education platform built for future investors. Built by 3 college students, we believe investing should feel approachable and fun. we aim to take the complexity and boredom out of becoming financially literate using a modern, clean design, behavioral science, and AI guidance.
         </p>
       </motion.div>
     </div>

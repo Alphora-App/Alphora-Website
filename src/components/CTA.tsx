@@ -5,11 +5,26 @@ const FORMSPREE_ENDPOINT = "https://formspree.io/f/myznadvn";
 
 export default function CTA() {
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [message, setMessage] = useState<string | null>(null);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setStatus("loading");
     const form = new FormData(e.currentTarget);
+    const email = (form.get("email") || "").toString().trim().toLowerCase();
+
+    // local duplicate check
+    try {
+      const seenRaw = localStorage.getItem("alphora_waitlist_emails");
+      const seen: string[] = seenRaw ? JSON.parse(seenRaw) : [];
+      if (seen.includes(email)) {
+        setStatus("error");
+        setMessage("You've already submitted that email.");
+        return;
+      }
+    } catch (err) {
+      // ignore localStorage parse errors
+    }
 
     try {
       const res = await fetch(FORMSPREE_ENDPOINT, {
@@ -19,12 +34,27 @@ export default function CTA() {
       });
       if (res.ok) {
         setStatus("success");
+        setMessage("Thanks — you're on the list!");
         (e.currentTarget as HTMLFormElement).reset();
+        // record email locally to prevent duplicates
+        try {
+          const seenRaw = localStorage.getItem("alphora_waitlist_emails");
+          const seen: string[] = seenRaw ? JSON.parse(seenRaw) : [];
+          seen.push(email);
+          localStorage.setItem("alphora_waitlist_emails", JSON.stringify(Array.from(new Set(seen))));
+        } catch (err) {}
       } else {
+        let bodyText = await res.text();
+        try {
+          const json = JSON.parse(bodyText);
+          if (json && json.errors && Array.isArray(json.errors) && json.errors[0]) bodyText = json.errors[0].message || bodyText;
+        } catch (err) {}
         setStatus("error");
+        setMessage(bodyText || "Something went wrong. Try again later.");
       }
     } catch (err) {
       setStatus("error");
+      setMessage("Network error — please try again later.");
     }
   }
 
@@ -51,8 +81,8 @@ export default function CTA() {
             </button>
           </form>
 
-          {status === "success" && <div className="mt-4 text-green-400">Thanks — you're on the list!</div>}
-          {status === "error" && <div className="mt-4 text-red-400">Something went wrong. Try again later.</div>}
+          {status === "success" && message && <div className="mt-4 text-green-400">{message}</div>}
+          {status === "error" && message && <div className="mt-4 text-red-400">{message}</div>}
         </div>
       </div>
     </section>

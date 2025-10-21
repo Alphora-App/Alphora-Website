@@ -4,16 +4,36 @@ const FORMSPREE_ENDPOINT = "https://formspree.io/f/myznadvn";
 
 export default function SiteFooter() {
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [message, setMessage] = useState<string | null>(null);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setStatus("loading");
     const form = new FormData(e.currentTarget);
+    const email = (form.get("email") || "").toString().trim().toLowerCase();
+
+    // local duplicate check
+    try {
+      const seenRaw = localStorage.getItem("alphora_waitlist_emails");
+      const seen: string[] = seenRaw ? JSON.parse(seenRaw) : [];
+      if (seen.includes(email)) {
+        setStatus("error");
+        setMessage("You've already submitted that email.");
+        return;
+      }
+    } catch (err) {}
     try {
       const res = await fetch(FORMSPREE_ENDPOINT, { method: "POST", headers: { Accept: "application/json" }, body: form });
       if (res.ok) {
         setStatus("success");
+        setMessage("Thanks — we'll be in touch!");
         (e.currentTarget as HTMLFormElement).reset();
+        try {
+          const seenRaw = localStorage.getItem("alphora_waitlist_emails");
+          const seen: string[] = seenRaw ? JSON.parse(seenRaw) : [];
+          seen.push(email);
+          localStorage.setItem("alphora_waitlist_emails", JSON.stringify(Array.from(new Set(seen))));
+        } catch (err) {}
       } else setStatus("error");
     } catch (err) {
       setStatus("error");
@@ -34,8 +54,8 @@ export default function SiteFooter() {
             <input name="email" type="email" placeholder="you@domain.com" className="w-full rounded-lg bg-white/5 px-3 py-2 text-brand-50 placeholder:text-brand-50/40 focus:outline-none" />
             <button className="px-4 rounded-lg bg-gradient-to-r from-violet-600/70 to-pink-500/70 text-white shadow-glow interactive" disabled={status === "loading"}>{status === "loading" ? "Sending..." : "Join"}</button>
           </form>
-          {status === "success" && <div className="mt-2 text-green-400">Thanks — we'll be in touch!</div>}
-          {status === "error" && <div className="mt-2 text-red-400">Submission failed. Try again later.</div>}
+          {status === "success" && message && <div className="mt-2 text-green-400">{message}</div>}
+          {status === "error" && message && <div className="mt-2 text-red-400">{message}</div>}
         </div>
 
         <div>

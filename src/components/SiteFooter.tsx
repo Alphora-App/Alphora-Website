@@ -9,7 +9,9 @@ export default function SiteFooter() {
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setStatus("loading");
-    const form = new FormData(e.currentTarget);
+    // Save a direct reference to the form element before any awaits.
+    const formEl = e.currentTarget as HTMLFormElement;
+    const form = new FormData(formEl);
     const email = (form.get("email") || "").toString().trim().toLowerCase();
 
     // local duplicate check
@@ -27,7 +29,11 @@ export default function SiteFooter() {
       if (res.ok) {
         setStatus("success");
         setMessage(`Thanks — we'll be in touch! We'll email you at ${email}.`);
-        (e.currentTarget as HTMLFormElement).reset();
+        try {
+          formEl.reset();
+        } catch (err) {
+          console.warn("Footer form reset failed:", err);
+        }
         try {
           const seenRaw = localStorage.getItem("alphora_waitlist_emails");
           const seen: string[] = seenRaw ? JSON.parse(seenRaw) : [];
@@ -54,7 +60,7 @@ export default function SiteFooter() {
           <h4 className="font-semibold text-brand-50 mb-3">Get early access</h4>
           <form onSubmit={handleSubmit} className="flex gap-2">
             <input name="email" type="email" placeholder="you@domain.com" className="w-full rounded-lg bg-white/5 px-3 py-2 text-brand-50 placeholder:text-brand-50/40 focus:outline-none" />
-            <button className="px-4 rounded-lg bg-gradient-to-r from-violet-600/70 to-pink-500/70 text-white shadow-glow interactive" disabled={status === "loading" || status === "success"}>{status === "loading" ? "Sending..." : "Join"}</button>
+            <button type="submit" className="px-4 rounded-lg bg-gradient-to-r from-violet-600/70 to-pink-500/70 text-white shadow-glow interactive" disabled={status === "loading" || status === "success"}>{status === "loading" ? "Sending..." : "Join"}</button>
           </form>
           {status === "success" && message && <div className="mt-2 text-green-400" role="status" aria-live="polite">{message}</div>}
           {status === "error" && message && <div className="mt-2 text-red-400" role="alert" aria-live="assertive">{message}</div>}

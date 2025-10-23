@@ -10,7 +10,11 @@ export default function CTA() {
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setStatus("loading");
-    const form = new FormData(e.currentTarget);
+    // Save a direct reference to the form element before any awaits.
+    // React may null out the synthetic event after async boundaries, so
+    // using `e.currentTarget` after an await can be null.
+    const formEl = e.currentTarget as HTMLFormElement;
+    const form = new FormData(formEl);
     const email = (form.get("email") || "").toString().trim().toLowerCase();
 
     // local duplicate check
@@ -35,7 +39,13 @@ export default function CTA() {
       if (res.ok) {
         setStatus("success");
         setMessage(`Thanks — you're on the list! We'll email you at ${email}.`);
-        (e.currentTarget as HTMLFormElement).reset();
+        // Use the saved form element reference to reset safely
+        try {
+          formEl.reset();
+        } catch (err) {
+          // If reset fails for any reason, don't crash the flow; just log.
+          console.warn("Form reset failed:", err);
+        }
         // record email locally to prevent duplicates
         try {
           const seenRaw = localStorage.getItem("alphora_waitlist_emails");

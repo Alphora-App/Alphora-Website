@@ -83,6 +83,14 @@ export default function CTA() {
               type="email"
               required
               placeholder="you@domain.com"
+              onChange={() => {
+                // Clear success/error messages when the user edits the input so the
+                // form can be reused for another submission. Don't clear while loading.
+                if (status !== "loading") {
+                  setStatus("idle");
+                  setMessage(null);
+                }
+              }}
               className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-3 text-brand-50 placeholder:text-brand-50/40 focus:outline-none focus:border-brand-400/50"
             />
             <button

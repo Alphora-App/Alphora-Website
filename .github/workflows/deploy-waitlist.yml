@@ -37,6 +37,13 @@ jobs:
           echo "This workflow will not attempt to set SUPABASE_* project variables because some Supabase projects restrict secret names."
           echo "If you need to set function-level secrets, set them in the Supabase Dashboard (Edge Functions -> your function -> Secrets)."
 
+      - name: Set allowed function secrets (SERVICE_ROLE & PROJECT_URL)
+        if: ${{ secrets.WAITLIST_SERVICE_ROLE && secrets.WAITLIST_PROJECT_URL }}
+        env:
+          SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+        run: |
+          supabase secrets set SERVICE_ROLE="${{ secrets.WAITLIST_SERVICE_ROLE }}" PROJECT_URL="${{ secrets.WAITLIST_PROJECT_URL }}" --project-ref "$SUPABASE_PROJECT_REF"
+
       - name: Optionally run SQL to create table
         if: ${{ secrets.SUPABASE_DB_URL }}
         env:

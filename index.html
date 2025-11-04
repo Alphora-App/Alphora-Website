@@ -10,6 +10,11 @@
   <body class="bg-brand-900 text-brand-50">
     <div id="root"></div>
     
+    <!-- Runtime waitlist endpoint injected so the site can post without rebuilding -->
+    <script>
+      window.__WAITLIST_ENDPOINT = 'https://zvrsxzkomtdraifgezan.functions.supabase.co/waitlistc';
+    </script>
+
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

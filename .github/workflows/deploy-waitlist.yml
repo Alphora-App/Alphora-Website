@@ -38,11 +38,15 @@ jobs:
           echo "If you need to set function-level secrets, set them in the Supabase Dashboard (Edge Functions -> your function -> Secrets)."
 
       - name: Set allowed function secrets (SERVICE_ROLE & PROJECT_URL)
-        if: ${{ secrets.WAITLIST_SERVICE_ROLE && secrets.WAITLIST_PROJECT_URL }}
         env:
           SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
         run: |
-          supabase secrets set SERVICE_ROLE="${{ secrets.WAITLIST_SERVICE_ROLE }}" PROJECT_URL="${{ secrets.WAITLIST_PROJECT_URL }}" --project-ref "$SUPABASE_PROJECT_REF"
+          # Only attempt to set function secrets if both GitHub secrets are provided.
+          if [ -z "${{ secrets.WAITLIST_SERVICE_ROLE }}" ] || [ -z "${{ secrets.WAITLIST_PROJECT_URL }}" ]; then
+            echo "Skipping setting function secrets: WAITLIST_SERVICE_ROLE or WAITLIST_PROJECT_URL not provided as GitHub secrets."
+          else
+            supabase secrets set SERVICE_ROLE="${{ secrets.WAITLIST_SERVICE_ROLE }}" PROJECT_URL="${{ secrets.WAITLIST_PROJECT_URL }}" --project-ref "$SUPABASE_PROJECT_REF"
+          fi
 
       - name: Smoke test the deployed function
         if: ${{ always() }}
@@ -56,13 +60,16 @@ jobs:
           echo "$output" | grep -E '"ok"\s*:\s*true|Already subscribed' >/dev/null || (echo "Smoke test failed: function did not return ok" && exit 1)
 
       - name: Optionally run SQL to create table
-        if: ${{ secrets.SUPABASE_DB_URL }}
         env:
           SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
         run: |
-          sudo apt-get update && sudo apt-get install -y postgresql-client
-          PGPASSWORD="$(echo $SUPABASE_DB_URL | sed -n 's#.*:\/\/[^:]*:\([^@]*\)@.*#\1#p')" \
-          psql "$SUPABASE_DB_URL" -f supabase/sql/create_waitlist_table.sql
+          if [ -z "${{ secrets.SUPABASE_DB_URL }}" ]; then
+            echo "Skipping SQL step: SUPABASE_DB_URL not provided as GitHub secret."
+          else
+            sudo apt-get update && sudo apt-get install -y postgresql-client
+            PGPASSWORD="$(echo "${{ secrets.SUPABASE_DB_URL }}" | sed -n 's#.*://[^:]*:\([^@]*\)@.*#\1#p')"
+            psql "${{ secrets.SUPABASE_DB_URL }}" -f supabase/sql/create_waitlist_table.sql
+          fi
 
       - name: Print success message
         run: echo "Deployed waitlistc function (check Supabase dashboard for URL & logs)"

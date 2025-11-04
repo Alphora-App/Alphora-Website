@@ -1,0 +1,50 @@
+name: Deploy Supabase waitlist function
+
+on:
+  push:
+    paths:
+      - 'supabase/functions/waitlistc/**'
+      - '.github/workflows/deploy-waitlist.yml'
+  workflow_dispatch: {}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Install Supabase CLI
+        run: |
+          curl -L https://github.com/supabase/cli/releases/latest/download/supabase_$(uname -s)_amd64.tar.gz | tar -xz
+          sudo mv supabase /usr/local/bin/supabase
+
+      - name: Login to Supabase
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          supabase login --token "$SUPABASE_ACCESS_TOKEN"
+
+      - name: Deploy waitlist function
+        env:
+          SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+        run: |
+          supabase functions deploy waitlistc --project-ref "$SUPABASE_PROJECT_REF" --no-verify-jwt
+
+      - name: Note about secrets
+        run: |
+          echo "Ensure your Supabase project has the required project-level variables set (SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, etc.)."
+          echo "This workflow will not attempt to set SUPABASE_* project variables because some Supabase projects restrict secret names."
+          echo "If you need to set function-level secrets, set them in the Supabase Dashboard (Edge Functions -> your function -> Secrets)."
+
+      - name: Optionally run SQL to create table
+        if: ${{ secrets.SUPABASE_DB_URL }}
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          sudo apt-get update && sudo apt-get install -y postgresql-client
+          PGPASSWORD="$(echo $SUPABASE_DB_URL | sed -n 's#.*:\/\/[^:]*:\([^@]*\)@.*#\1#p')" \
+          psql "$SUPABASE_DB_URL" -f supabase/sql/create_waitlist_table.sql
+
+      - name: Print success message
+        run: echo "Deployed waitlistc function (check Supabase dashboard for URL & logs)"

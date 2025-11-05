@@ -1,7 +1,24 @@
 import { useState } from "react";
 
-// Replace YOUR_FORM_ID with the Formspree form ID you get from https://formspree.io
-const FORMSPREE_ENDPOINT = "https://formspree.io/f/myznadvn";
+// Endpoint to POST waitlist submissions to. Set VITE_WAITLIST_ENDPOINT at build time
+// to point to your deployed Supabase Edge Function (e.g. https://<project>.functions.supabase.co/waitlistc).
+// Prefer a build-time VITE_WAITLIST_ENDPOINT, but allow a runtime override so the
+// deployed HTML can set window.__WAITLIST_ENDPOINT or a meta tag without rebuilding.
+const BUILD_WAITLIST_ENDPOINT = ((import.meta as any).env?.VITE_WAITLIST_ENDPOINT as string) || "";
+
+function resolveWaitlistEndpoint(): string {
+  if (BUILD_WAITLIST_ENDPOINT) return BUILD_WAITLIST_ENDPOINT;
+  try {
+    if (typeof window !== "undefined" && (window as any).__WAITLIST_ENDPOINT) return (window as any).__WAITLIST_ENDPOINT as string;
+    if (typeof document !== "undefined") {
+      const m = document.querySelector('meta[name="waitlist-endpoint"]') as HTMLMetaElement | null;
+      if (m && m.content) return m.content;
+    }
+  } catch (e) {
+    // ignore
+  }
+  return "";
+}
 
 export default function CTA() {
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
@@ -10,12 +27,21 @@ export default function CTA() {
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setStatus("loading");
+    const endpoint = resolveWaitlistEndpoint();
+    if (!endpoint) {
+      setStatus("error");
+      setMessage("Server not configured — VITE_WAITLIST_ENDPOINT is missing. Please contact the site admin.");
+      return;
+    }
     // Save a direct reference to the form element before any awaits.
     // React may null out the synthetic event after async boundaries, so
     // using `e.currentTarget` after an await can be null.
-    const formEl = e.currentTarget as HTMLFormElement;
-    const form = new FormData(formEl);
-    const email = (form.get("email") || "").toString().trim().toLowerCase();
+  const formEl = e.currentTarget as HTMLFormElement;
+  const form = new FormData(formEl);
+  const email = (form.get("email") || "").toString().trim().toLowerCase();
+  const honeypot = (form.get("_hp") || "").toString();
+  // ensure source is present for server-side analytics
+  form.set("source", "cta");
 
     // local duplicate check
     try {
@@ -31,11 +57,10 @@ export default function CTA() {
     }
 
     try {
-      const res = await fetch(FORMSPREE_ENDPOINT, {
-        method: "POST",
-        headers: { Accept: "application/json" },
-        body: form,
-      });
+      // If we're still pointing at Formspree, send FormData (Formspree expects form-encoded data).
+      // If we're pointing to our own waitlist endpoint (e.g. Supabase function), send JSON.
+      // Send as FormData to avoid preflight. The function accepts multipart/form-data.
+      const res = await fetch(endpoint, { method: "POST", headers: { Accept: "application/json" }, body: form });
       if (res.ok) {
         setStatus("success");
         setMessage(`Thanks — you're on the list! We'll email you at ${email}.`);
@@ -67,7 +92,9 @@ export default function CTA() {
       console.error("Waitlist submission failed:", err);
       setStatus("error");
       const short = err && err instanceof Error ? err.message : String(err || "");
-      setMessage(`Network error — please try again later.${short ? ` (${short})` : ""}`);
+      setMessage(
+        `Network error — please try again later.${short ? ` (${short})` : ""} The waitlist endpoint may be protected (401/CORS). Make the function public or proxy requests through a server that adds an Authorization header.`
+      );
     }
   }
 
@@ -117,3 +144,5 @@ export default function CTA() {
     </section>
   );
 }
+
+

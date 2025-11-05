@@ -1,6 +1,22 @@
 import { useState } from "react";
 
-const FORMSPREE_ENDPOINT = "https://formspree.io/f/myznadvn";
+// Prefer a build-time VITE_WAITLIST_ENDPOINT, but allow a runtime override so the
+// deployed HTML can set window.__WAITLIST_ENDPOINT or a meta tag without rebuilding.
+const BUILD_WAITLIST_ENDPOINT = ((import.meta as any).env?.VITE_WAITLIST_ENDPOINT as string) || "";
+
+function resolveWaitlistEndpoint(): string {
+  if (BUILD_WAITLIST_ENDPOINT) return BUILD_WAITLIST_ENDPOINT;
+  try {
+    if (typeof window !== "undefined" && (window as any).__WAITLIST_ENDPOINT) return (window as any).__WAITLIST_ENDPOINT as string;
+    if (typeof document !== "undefined") {
+      const m = document.querySelector('meta[name="waitlist-endpoint"]') as HTMLMetaElement | null;
+      if (m && m.content) return m.content;
+    }
+  } catch (e) {
+    // ignore
+  }
+  return "";
+}
 
 export default function SiteFooter() {
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
@@ -9,10 +25,18 @@ export default function SiteFooter() {
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setStatus("loading");
-    // Save a direct reference to the form element before any awaits.
-    const formEl = e.currentTarget as HTMLFormElement;
-    const form = new FormData(formEl);
-    const email = (form.get("email") || "").toString().trim().toLowerCase();
+    const endpoint = resolveWaitlistEndpoint();
+    if (!endpoint) {
+      setStatus("error");
+      setMessage("Server not configured — VITE_WAITLIST_ENDPOINT is missing. Please contact the site admin.");
+      return;
+    }
+  // Save a direct reference to the form element before any awaits.
+  const formEl = e.currentTarget as HTMLFormElement;
+  const form = new FormData(formEl);
+  const email = (form.get("email") || "").toString().trim().toLowerCase();
+  const honeypot = (form.get("_hp") || "").toString();
+  form.set("source", "footer");
 
     // local duplicate check
     try {
@@ -25,7 +49,8 @@ export default function SiteFooter() {
       }
     } catch (err) {}
     try {
-      const res = await fetch(FORMSPREE_ENDPOINT, { method: "POST", headers: { Accept: "application/json" }, body: form });
+      // Send FormData to avoid preflight; function will parse multipart/form-data.
+      const res = await fetch(endpoint, { method: "POST", headers: { Accept: "application/json" }, body: form });
       if (res.ok) {
         setStatus("success");
         setMessage(`Thanks — we'll be in touch! We'll email you at ${email}.`);
@@ -44,7 +69,10 @@ export default function SiteFooter() {
     } catch (err) {
       console.error("Footer waitlist submission failed:", err);
       setStatus("error");
-      setMessage(err && err instanceof Error ? err.message : "Network error — please try again later.");
+      const short = err && err instanceof Error ? err.message : String(err || "");
+      setMessage(
+        `Network error — please try again later.${short ? ` (${short})` : ""} The waitlist endpoint may be protected (401/CORS). Make the function public or proxy requests through a server that adds an Authorization header.`
+      );
     }
   }
 

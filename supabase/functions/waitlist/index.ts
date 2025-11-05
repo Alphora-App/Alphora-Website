@@ -1,26 +1,134 @@
-import { serve } from "std/server";
-import { createClient } from "@supabase/supabase-js";
+// Use an explicit deno.land std import so the bundler can resolve the module.
+import { serve } from "https://deno.land/std@0.203.0/http/server.ts";
+import { createClient } from "npm:@supabase/supabase-js";
 
-// Read SUPABASE_* variables if present, but also fall back to allowed names some deployers accept
-// (SERVICE_ROLE / PROJECT_URL) so CI can set non-SUPABASE_* secrets when needed.
-const SUPABASE_URL =
-  Deno.env.get("SUPABASE_URL") || Deno.env.get("SUPABASE_SERVICE_URL") || Deno.env.get("PROJECT_URL") || Deno.env.get("URL") || Deno.env.get("WAITLIST_SUPABASE_URL") || "";
-// Service role key: prefer SUPABASE_SERVICE_ROLE or SUPABASE_SERVICE_ROLE_KEY, then fall back to SERVICE_ROLE
-const SUPABASE_SERVICE_ROLE =
-  Deno.env.get("SUPABASE_SERVICE_ROLE") || Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || Deno.env.get("SERVICE_ROLE") || Deno.env.get("WAITLIST_SERVICE_ROLE") || "";
-const RECAPTCHA_SECRET = Deno.env.get("RECAPTCHA_SECRET") || Deno.env.get("WAITLIST_RECAPTCHA_SECRET") || ""; // optional
+// Helper to read the first available env var from a list of possible names.
+function getEnv(...names: string[]) {
+  for (const n of names) {
+    let v = "";
+    const g = globalThis as any;
+    // prefer Deno env when available via globalThis to avoid TS 'Deno' name errors
+    if (g.Deno && g.Deno.env && typeof g.Deno.env.get === "function") {
+      v = g.Deno.env.get(n) || "";
+    } else if (g.process && g.process.env) {
+      v = g.process.env[n] || "";
+    } else if (g.__env) {
+      v = g.__env[n] || "";
+    }
+    if (v) return v;
+  }
+  return "";
+}
+
+function findEnvName(...names: string[]) {
+  const g = globalThis as any;
+  for (const n of names) {
+    if (g.Deno && g.Deno.env && typeof g.Deno.env.get === "function") {
+      if (g.Deno.env.get(n)) return n;
+    } else if (g.process && g.process.env) {
+      if (g.process.env[n]) return n;
+    } else if (g.__env) {
+      if (g.__env[n]) return n;
+    }
+  }
+  return null;
+}
+
+// Read SUPABASE_* variables if present, but also fall back to a variety of alternate names
+// (SERVICE_ROLE / PROJECT_URL / DATABASE_URL, etc.) so deployers that forbid certain prefixes
+// can still provide secrets under another name.
+const SUPABASE_URL = getEnv(
+  "SUPABASE_URL",
+  "SUPABASE_SERVICE_URL",
+  "PROJECT_URL",
+  "URL",
+  "WAITLIST_SUPABASE_URL",
+  "DATABASE_URL",
+  "DB_URL",
+  "SUPABASE_DB_URL",
+  "PG_URL"
+);
+
+// Service role key: try many common names (with and without SUPABASE_ prefix)
+const SUPABASE_SERVICE_ROLE = getEnv(
+  "SUPABASE_SERVICE_ROLE",
+  "SUPABASE_SERVICE_ROLE_KEY",
+  "SUPABASE_SERVICE_KEY",
+  "SERVICE_ROLE",
+  "SERVICE_ROLE_KEY",
+  "SERVICE_KEY",
+  "WAITLIST_SERVICE_ROLE",
+  "WAITLIST_SERVICE_KEY"
+);
+
+const RECAPTCHA_SECRET = getEnv("RECAPTCHA_SECRET", "WAITLIST_RECAPTCHA_SECRET", "RECAPTCHA"); // optional
+
+try {
+  const urlName = findEnvName(
+    "SUPABASE_URL",
+    "SUPABASE_SERVICE_URL",
+    "PROJECT_URL",
+    "URL",
+    "WAITLIST_SUPABASE_URL",
+    "DATABASE_URL",
+    "DB_URL",
+    "SUPABASE_DB_URL",
+    "PG_URL"
+  );
+  const keyName = findEnvName(
+    "SUPABASE_SERVICE_ROLE",
+    "SUPABASE_SERVICE_ROLE_KEY",
+    "SUPABASE_SERVICE_KEY",
+    "SERVICE_ROLE",
+    "SERVICE_ROLE_KEY",
+    "SERVICE_KEY",
+    "WAITLIST_SERVICE_ROLE",
+    "WAITLIST_SERVICE_KEY"
+  );
+  console.log(`Resolved env names: SUPABASE_URL -> ${urlName ?? "(none)"}, SERVICE_ROLE -> ${keyName ?? "(none)"}`);
+} catch (e) {}
 
 if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE) {
   console.error("Missing required environment variables. Need SUPABASE_URL and SUPABASE_SERVICE_ROLE[_KEY] to be set in function secrets.");
 }
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE, { auth: { persistSession: false } });
+function getSupabaseClient() {
+  const urlName = findEnvName(
+    "SUPABASE_URL",
+    "SUPABASE_SERVICE_URL",
+    "PROJECT_URL",
+    "URL",
+    "WAITLIST_SUPABASE_URL",
+    "DATABASE_URL",
+    "DB_URL",
+    "SUPABASE_DB_URL",
+    "PG_URL"
+  );
+  const keyName = findEnvName(
+    "SUPABASE_SERVICE_ROLE",
+    "SUPABASE_SERVICE_ROLE_KEY",
+    "SUPABASE_SERVICE_KEY",
+    "SERVICE_ROLE",
+    "SERVICE_ROLE_KEY",
+    "SERVICE_KEY",
+    "WAITLIST_SERVICE_ROLE",
+    "WAITLIST_SERVICE_KEY"
+  );
+  console.log(`Resolved env names: SUPABASE_URL -> ${urlName ?? "(none)"}, SERVICE_ROLE -> ${keyName ?? "(none)"}`);
+
+  const url = SUPABASE_URL;
+  const key = SUPABASE_SERVICE_ROLE;
+  if (!url || !key) {
+    throw new Error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE environment variables");
+  }
+  return createClient(url, key, { auth: { persistSession: false } });
+}
 
 function isValidEmail(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
-serve(async (req) => {
+serve(async (req: Request) => {
   try {
     if (req.method !== "POST") return new Response("Method Not Allowed", { status: 405 });
 
@@ -44,6 +152,15 @@ serve(async (req) => {
       });
       const vjson = await verify.json().catch(() => ({}));
       if (!vjson.success) return new Response("Captcha failed", { status: 400 });
+    }
+
+    // Create supabase client for this request (and log which env names were found)
+    let supabase;
+    try {
+      supabase = getSupabaseClient();
+    } catch (err: any) {
+      console.error("Supabase client creation failed:", err?.message ?? String(err));
+      return new Response("Server configuration error", { status: 500 });
     }
 
     // Simple rate-limit: has this IP inserted in the last 30s?

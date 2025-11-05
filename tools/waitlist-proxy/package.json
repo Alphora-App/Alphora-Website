@@ -1,0 +1,12 @@
+{
+  "name": "waitlist-proxy",
+  "version": "1.0.0",
+  "description": "Tiny proxy to forward waitlist posts to Supabase Edge Function with service role header",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
